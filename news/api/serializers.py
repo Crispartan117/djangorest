@@ -1,7 +1,25 @@
+from datetime import datetime
+from django.utils.timesince import timesince
 from rest_framework import serializers
 from news.models import Article
 
-class ArticleSerializer(serializers.Serializer):
+class ArticleSerializer(serializers.ModelSerializer):
+
+    time_since_publication = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Article
+        exclude = ("id",)
+        #fields = "__all__" # Agregamos todos los campos del modelo
+        #fields = ("title", "description", "body") # Agregamos solo los campos seleccionados.
+    
+    def get_time_since_publication(self, object):
+        publication_date = object.publication_date
+        now = datetime.now()
+        time_delta = timesince(publication_date, now)
+        return time_delta
+
+""" class ArticleSerializer(serializers.Serializer):
     id                  = serializers.IntegerField(read_only=True)
     author              = serializers.CharField()
     title               = serializers.CharField()
@@ -27,6 +45,18 @@ class ArticleSerializer(serializers.Serializer):
         instance.active             = validated_data.get('active', instance.active)
         instance.save()
         return instance
+
+    #Comparativo.
+    def validate(self, data):
+        if data["title"] == data["description"]: #Compara si las cadenas de datos de titulo y descripcion son diferentes.
+            raise serializers.ValidationError("Title and Description must be different!")
+        return data
+    
+    #Por campo.
+    def validate_title(self, value):
+        if len(value) < 60:
+            raise serializers.ValidationError("The title must be at least 60 characters!")
+        return value """
     
     
         
